@@ -1,98 +1,105 @@
-# Домашнее задание по теме "Множественное наследование"
+# Дополнительное практическое задание по модулю: "Наследование классов."
 
-import random
+class Figure:
+    sides_count = 0
 
+    def __init__(self, color, *sides):
+        self.__sides = []
+        self.__color = list(color)  # RGB color as a list
+        self.filled = False
 
-class Animal:
-    def __init__(self, speed):
-        self.live = True
-        self.sound = None
-        self._DEGREE_OF_DANGER = 0
-        self._cords = [0, 0, 0]  # X, Y, Z
-        self.speed = speed
-
-    def move(self, dx, dy, dz):
-        # Изменение координат с учетом скорости
-        self._cords[0] += dx * self.speed
-        self._cords[1] += dy * self.speed
-
-        # Обработка координаты Z
-        if self._cords[2] + (dz * self.speed) < 0:
-            print("It's too deep, i can't dive :(")
+        # Если количество сторон верное, устанавливаем их
+        if self.__is_valid_sides(*sides):
+            self.__sides = list(sides)
         else:
-            self._cords[2] += dz * self.speed
+            self.__sides = [1] * self.sides_count
 
-    def get_cords(self):
-        print(f"X: {self._cords[0]} Y: {self._cords[1]} Z: {self._cords[2]}")
+    def __is_valid_color(self, r, g, b):
+        return all(isinstance(c, int) and 0 <= c <= 255 for c in (r, g, b))
 
-    def attack(self):
-        if self._DEGREE_OF_DANGER < 5:
-            print("Sorry, i'm peaceful :)")
-        else:
-            print("Be careful, i'm attacking you 0_0")
+    def set_color(self, r, g, b):
+        if self.__is_valid_color(r, g, b):
+            self.__color = [r, g, b]
 
-    def speak(self):
-        if self.sound is not None:
-            print(self.sound)
-        else:
-            print("Silence")
+    def get_color(self):
+        return self.__color
 
+    def __is_valid_sides(self, *new_sides):
+        return len(new_sides) == self.sides_count and all(isinstance(side, int) and side > 0 for side in new_sides)
 
-class Bird(Animal):
-    def __init__(self, speed):
-        super().__init__(speed)
-        self.beak = True
+    def set_sides(self, *new_sides):
+        if self.__is_valid_sides(*new_sides):
+            self.__sides = list(new_sides)
 
-    def lay_eggs(self):
-        eggs = random.randint(1, 4)
-        print(f"Here are(is) {eggs} eggs for you")
+    def get_sides(self):
+        return self.__sides
 
+    def __len__(self):
+        return sum(self.__sides)
 
-class AquaticAnimal(Animal):
-    def __init__(self, speed):
-        super().__init__(speed)
-        self._DEGREE_OF_DANGER = 3
-
-    def dive_in(self, dz):
-        dz = abs(dz)  # берем модуль
-        speed_dive = self.speed / 2  # скорость при нырянии
-        self._cords[2] -= dz * speed_dive  # уменьшаем Z
-        if self._cords[2] < 0:
-            print("It's too deep, i can't dive :(")
-            self._cords[2] += dz * speed_dive  # отменяем движение, если глубже нуля
+    def get_perimeter(self):
+        return sum(self.__sides)  # Это будет просто сумма всех сторон
 
 
-class PoisonousAnimal(Animal):
-    def __init__(self, speed):
-        super().__init__(speed)
-        self._DEGREE_OF_DANGER = 8
+class Circle(Figure):
+    sides_count = 1
+
+    def __init__(self, color, circumference):
+        super().__init__(color, 1)  # одна сторона
+        self.__radius = circumference / (2 * 3.14159)  # Получаем радиус из длины окружности
+
+    def get_square(self):
+        return 3.14159 * (self.__radius ** 2)
+
+    def get_radius(self):
+        return self.__radius
 
 
-class Duckbill(Bird, AquaticAnimal, PoisonousAnimal):
-    def __init__(self, speed):
-        Bird.__init__(self, speed)  # Инициализируем родительские классы
-        AquaticAnimal.__init__(self, speed)
-        PoisonousAnimal.__init__(self, speed)
+class Triangle(Figure):
+    sides_count = 3
 
-        self.sound = "Click-click-click"  # звук утконоса
+    def __init__(self, color, *sides):
+        super().__init__(color, *sides)  # Наследуем все атрибуты от Figure
+
+    def get_square(self):
+        a, b, c = self.__sides
+        s = (a + b + c) / 2  # Полупериметр
+        return (s * (s - a) * (s - b) * (s - c)) ** 0.5  # Формула Герона
 
 
-# Пример использования классов:
+class Cube(Figure):
+    sides_count = 12
 
-db = Duckbill(10)
+    def __init__(self, color, side):
+        super().__init__(color, *([side] * self.sides_count))  # 12 сторон с указанным значением
 
-print(db.live)
-print(db.beak)
+    def get_volume(self):
+        return self.get_sides()[0] ** 3  # Объём куба V = a^3
 
-db.speak()
-db.attack()
 
-db.move(1, 2, 3)
-db.get_cords()  # X: 10 Y: 20 Z: 30
-db.dive_in(6)
-db.get_cords()  # X: 10 Y: 20 Z: 0
+# Примеры использования:
 
-db.lay_eggs()  # Here are(is) 3 eggs for you (число может варьироваться)
+circle1 = Circle((200, 200, 100), 10)  # (Цвет, длина окружности)
+cube1 = Cube((222, 35, 130), 6)
+
+# Проверка на изменение цветов:
+circle1.set_color(55, 66, 77)
+print(circle1.get_color())
+
+cube1.set_color(300, 70, 15)
+print(cube1.get_color())
+# Проверка на изменение сторон:
+print(cube1.get_sides())
+
+circle1.set_sides(15)  # Изменится
+print(circle1.get_sides())
+
+# Проверка периметра (круга):
+print(len(circle1))
+
+# Проверка объёма (куба):
+print(cube1.get_volume())
+
 
 
 
